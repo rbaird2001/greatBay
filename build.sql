@@ -1,0 +1,33 @@
+CREATE DATABASE IF NOT EXISTS greatBay;
+
+USE greatbay;
+
+CREATE TABLE IF NOT EXISTS bidItems (
+    id INT NOT NULL AUTO_INCREMENT,
+    title VARCHAR(256) NOT NULL,
+    detail VARCHAR(4096) NULL,
+    cat INT NULL DEFAULT 0,
+    strtBid DEC NULL DEFAULT 0,
+    currBid DEC NULL DEFAULT 0,
+    bidStatus VARCHAR(32) NULL DEFAULT "Open",
+    bidWinner INT NULL DEFAULT 0  -- fk bidder.id
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS bidHistory(
+    id INT NOT NULL AUTO_INCREMENT,
+    bidder VARCHAR(256) NOT NULL,
+    amount DEC NOT NULL DEFAULT 0,
+    bidTIME BIGINT DEFAULT 0,
+    bidItems INT NOT NULL,  -- fk bidItems.id
+    PRIMARY KEY (id)
+);
+
+CREATE TABLE IF NOT EXISTS bidder(
+    id INT NOT NULL AUTO_INCREMENT,
+    email VARCHAR(1024) NOT NULL,
+    passwd VARCHAR(32) NULL,
+    PRIMARY KEY (id)
+);
+
+

@@ -1,0 +1,19 @@
+{
+  "name": "greatbay",
+  "version": "1.0.0",
+  "description": "Node CLI Auction Tool",
+  "main": "greatbay.js",
+  "dependencies": {
+    "inquirer": "^7.0.0",
+    "mysql": "^2.17.1"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node greatbay.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "buildSchema": "mysql -u root -p < ./build.sql"
+  },
+  "keywords": [],
+  "author": "Irra, Smith, Edmunds, Baird",
+  "license": "MIT"
+}
