@@ -1,154 +1,159 @@
 var mysql = require("mysql");
-var inquirer = require('inquirer');
+var inquirer = require("inquirer");
 var dbConn = mysql.createConnection({
-    host: "localhost", //Where your DB server is located localhost refers to your computer.
+  host: "localhost", //Where your DB server is located localhost refers to your computer.
 
-    port: 3306,  // Your port; if not 3306. 3306 is the mysql default port for TCPIP. 
+  port: 3306, // Your port; if not 3306. 3306 is the mysql default port for TCPIP.
 
+  user: "root", // The name of the account used to communicate with mysql.
 
-    user: "root", // The name of the account used to communicate with mysql. 
-
-    // Your password
-    password: "KrazyGlu3",  //add your password
-    database: "greatbay"
+  // Your password
+  password: "KrazyGlu3", //add your password
+  database: "greatbay"
 });
-const chooseAction = inquirer.prompt([
+const chooseAction = inquirer
+  .prompt([
     {
-        type: 'rawlist',
-        name: 'action',
-        message: "what do you want to do?",
-        choices: [
-            {name: 'Post an Item',value:1},
-            {name: "Bid on Item",value: 2}
-        ]
+      type: "rawlist",
+      name: "action",
+      message: "what do you want to do?",
+      choices: [
+        { name: "Post an Item", value: 1 },
+        { name: "Bid on Item", value: 2 }
+      ]
     }
-])
-    .then(function (resp) {
-        console.log(resp);
-        if (resp.action === 1) {
-            inquirer.prompt([
-                {
-                    type: "input",
-                    name: "detail",
-                    message: "Add a detailed description of your item: "
-
-                },
-                {
-                    type: "input",
-                    name: "title",
-                    message: "Enter a title for your item (This will be the headline the bidder reads): "
-                },
-                {
-                    type: "rawlist",
-                    name: "cat",
-                    choices:[
-                        {name:"Automobile",value:1},
-                        {name:"Computers",value:2},
-                        {name:"Consumer Electronics",value:3},
-                        {name:"Sporting Goods",value:4},
-                        {name:"AWOD",value:5},
-                        {name:"Backpage",value:6}
-                    ]
-                }
-            ])
-                .then(function (resp2) {
-                    console.log(resp2)
-                    createItem(resp2)
-                })
-        }
-        else{
-            inquirer.prompt([
-                {
-                    type:"rawlist",
-                    name:"cat",
-                    message:"Select a category",
-                    choices:[
-                        {name:"Automobile",value:1},
-                        {name:"Computers",value:2},
-                        {name:"Consumer Electronics",value:3},
-                        {name:"Sporting Goods",value:4},
-                        {name:"Collectibles",value:5},
-                        {name:"Misc",value:6}
-                    ]
-                }
-            ]).then(function(catChoice){
-                getBidItems(catChoice);
-            }).then(function(resolve,reject){
-                if(reject){
-                    console.log(reject)
-                    dbConn.end();
-                }
-                else{
-                    console.log(resolve);
-                    dbConn.end();
-                }
+  ])
+  .then(function(resp) {
+    console.log(resp);
+    if (resp.action === 1) {
+      inquirer
+        .prompt([
+          {
+            type: "input",
+            name: "detail",
+            message: "Add a detailed description of your item: "
+          },
+          {
+            type: "input",
+            name: "title",
+            message:
+              "Enter a title for your item (This will be the headline the bidder reads): "
+          },
+          {
+            type: "rawlist",
+            name: "cat",
+            choices: [
+              { name: "Automobile", value: 1 },
+              { name: "Computers", value: 2 },
+              { name: "Consumer Electronics", value: 3 },
+              { name: "Sporting Goods", value: 4 },
+              { name: "AWOD", value: 5 },
+              { name: "Backpage", value: 6 }
+            ]
+          }
+        ])
+        .then(function(resp2) {
+          console.log(resp2);
+          createItem(resp2);
+        });
+    } else {
+      inquirer
+        .prompt([
+          {
+            type: "rawlist",
+            name: "cat",
+            message: "Select a category",
+            choices: [
+              { name: "Automobile", value: 1 },
+              { name: "Computers", value: 2 },
+              { name: "Consumer Electronics", value: 3 },
+              { name: "Sporting Goods", value: 4 },
+              { name: "Collectibles", value: 5 },
+              { name: "Misc", value: 6 }
+            ]
+          }
+        ])
+        .then(function(catChoice) {
+            // getBidItems returns a promise and you can handle it in the .then of the prompt
+          getBidItems(catChoice)
+            .then(function(data) {
+              console.log(data);
+              dbConn.end();
             })
-        }
-    })
+            .catch(function(err) {
+              console.log(err);
+              dbConn.end();
+            });
+        });
+    }
+  });
 
 function createItem(bidItem) {
-    console.log("Creating a new item...\n");
-    var query = dbConn.query(
-        "INSERT INTO bidItems SET ?", bidItem,
-            function (err, res) {
-                if (err) {
-                    console.log(err);
-                    console.log(query.sql);
-                    throw err;
-                }
-                console.log(res.affectedRows + " Items inserted!\n");
-                dbConn.end();
-        }
-    );
+  console.log("Creating a new item...\n");
+  var query = dbConn.query("INSERT INTO bidItems SET ?", bidItem, function(
+    err,
+    res
+  ) {
+    if (err) {
+      console.log(err);
+      console.log(query.sql);
+      throw err;
+    }
+    console.log(res.affectedRows + " Items inserted!\n");
+    dbConn.end();
+  });
 }
 
-const getBidItems = function(itemCat){
-    return new Promise(function(resolve, reject){ 
-        let qry= dbConn.query("SELECT id,title FROM bidItems",function (err,resp){
-            if(err){
-                reject(err)
-                resolve(null)
-            }
-            else{
-                console.log(resp)
-                reject(null)
-                resolve(resp)
-            }
-        });
+const getBidItems = function(itemCat) {
+  return new Promise(function(resolve, reject) {
+    let qry = dbConn.query("SELECT id,title FROM bidItems", function(
+      err,
+      resp
+    ) {
+      if (err) {
+        // Resolve or reject not both
+        reject(err);
+        //resolve(null);
+      } else {
+        console.log(resp);
+        // reject(null);
+        resolve(resp);
+      }
     });
+  });
 };
 
-const placeBid = function(){};
-
+const placeBid = function() {};
 
 function updateProduct() {
-    console.log("Updating bids ...\n");
-    var query = connection.query(
-        "UPDATE cars SET ? WHERE ?",
-        [{
-            bid: 5
-        },
-        {
-            model: 'Chevy'
-        }
-        ],
-        function (err, res) {
-            if (err) throw err;
-            console.log(res.affectedRows + " cars updated!\n");
-            //Call deleteProduct AFTER the UPDATE completes
-            //deleteProduct();
-            readProducts();
-        }
-    )
-};
+  console.log("Updating bids ...\n");
+  var query = connection.query(
+    "UPDATE cars SET ? WHERE ?",
+    [
+      {
+        bid: 5
+      },
+      {
+        model: "Chevy"
+      }
+    ],
+    function(err, res) {
+      if (err) throw err;
+      console.log(res.affectedRows + " cars updated!\n");
+      //Call deleteProduct AFTER the UPDATE completes
+      //deleteProduct();
+      readProducts();
+    }
+  );
+}
 
 function readProducts() {
-    console.log("Selecting all products...\n");
-    connection.query("SELECT * FROM cars", function (err, res) {
-        if (err) throw err;
-        // Log all results of the SELECT statement
-        console.log(res);
-        connection.end();
-    });
+  console.log("Selecting all products...\n");
+  connection.query("SELECT * FROM cars", function(err, res) {
+    if (err) throw err;
+    // Log all results of the SELECT statement
+    console.log(res);
+    connection.end();
+  });
 }
 //createProduct();
