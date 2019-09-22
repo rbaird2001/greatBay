@@ -9,7 +9,8 @@ There is also a sql script to build the greatbay database used by the script. It
 
 The script also adds 4 items for bidding. This should give you the ability to test the process.
 
-##Contributors
+## Contributors
+
 Irv Irra
 
 Kristopher Smith
