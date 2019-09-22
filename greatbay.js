@@ -8,10 +8,11 @@ var dbConn = mysql.createConnection({
   user: "root", // The name of the account used to communicate with mysql.
 
   // Your password
-  password: "KrazyGlu3", //add your password
+  password: "", //add your password
   database: "greatbay"
 });
-const chooseAction = inquirer
+let itemID = 0
+const chooseAction = inquirer //This is Where the majority of action takes place
   .prompt([
     {
       type: "rawlist",
@@ -52,13 +53,13 @@ const chooseAction = inquirer
             ]
           }
         ])
-        .then(function(resp2) {
-          console.log(resp2);
-          createItem(resp2);
+        .then(function(resp) {
+          console.log(resp);
+          createItem(resp);
         });
     } else {
       inquirer
-        .prompt([
+        .prompt([  //This selection is not being used at the moment it will be in the future
           {
             type: "rawlist",
             name: "cat",
@@ -77,8 +78,49 @@ const chooseAction = inquirer
             // getBidItems returns a promise and you can handle it in the .then of the prompt
           getBidItems(catChoice)
             .then(function(data) {
-              console.log(data);
-              dbConn.end();
+              //console.log("return data",data);
+              inquirer.prompt([
+                  {
+                      name:"selectedItem",
+                      type: "rawlist",
+                      message: "current items to bid",
+                      choices: data, //The results from getBidItems are populated here
+                  }
+              ])
+                .then(function(resp){  //The selection above creates parameters for this query
+                    //console.log(resp.selectedItem);
+                    itemID = resp.selectedItem  //This variable is created at the top of the js script so it can be called at various points.
+                    let qry = dbConn.query("SELECT detail,currBid FROM bidItems where id = ? ",itemID,function(err,dataset){
+                        if(err){
+                            console.log(err);
+                            console.log(qry.sql);
+                            dbConn.end()
+                            return false
+                        }
+                        console.log(`Item description: ${dataset[0].detail}`); //show item detail to the user
+                        console.log(`Current high bid: ${dataset[0].currBid}`);
+                        inquirer.prompt([
+                            {
+                                message: "Enter your bid amount.",
+                                type:"number",
+                                name:"bid",
+                            }
+                        ])
+                            .then(function(resp){
+                                let qry=dbConn.query("UPDATE bidItems SET currBid = ? WHERE id = ?",[resp.bid,itemID],function(err){
+                                    if(err){
+                                        console.log(`Update Error: ${err}`);
+                                        console.log(qry.sql);
+                                        dbConn.end()
+                                        return false
+                                    }
+                                    console.log("Bid accepted");
+                                    dbConn.end();
+                                    return true;
+                                })
+                            })
+                    })
+                })
             })
             .catch(function(err) {
               console.log(err);
@@ -106,54 +148,23 @@ function createItem(bidItem) {
 
 const getBidItems = function(itemCat) {
   return new Promise(function(resolve, reject) {
-    let qry = dbConn.query("SELECT id,title FROM bidItems", function(
+    let qry = dbConn.query("SELECT id as value,title as name,detail as message FROM bidItems", function(
       err,
-      resp
+      dataset
     ) {
       if (err) {
         // Resolve or reject not both
         reject(err);
         //resolve(null);
       } else {
-        console.log(resp);
+        // console.log(resp);
         // reject(null);
-        resolve(resp);
+        datasetString = JSON.stringify(dataset);
+        datasetJson = JSON.parse(datasetString);
+        resolve(datasetJson);
       }
     });
   });
 };
 
-const placeBid = function() {};
 
-function updateProduct() {
-  console.log("Updating bids ...\n");
-  var query = connection.query(
-    "UPDATE cars SET ? WHERE ?",
-    [
-      {
-        bid: 5
-      },
-      {
-        model: "Chevy"
-      }
-    ],
-    function(err, res) {
-      if (err) throw err;
-      console.log(res.affectedRows + " cars updated!\n");
-      //Call deleteProduct AFTER the UPDATE completes
-      //deleteProduct();
-      readProducts();
-    }
-  );
-}
-
-function readProducts() {
-  console.log("Selecting all products...\n");
-  connection.query("SELECT * FROM cars", function(err, res) {
-    if (err) throw err;
-    // Log all results of the SELECT statement
-    console.log(res);
-    connection.end();
-  });
-}
-//createProduct();
