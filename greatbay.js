@@ -56,6 +56,34 @@ const chooseAction = inquirer.prompt([
                     createItem(resp2)
                 })
         }
+        else{
+            inquirer.prompt([
+                {
+                    type:"rawlist",
+                    name:"cat",
+                    message:"Select a category",
+                    choices:[
+                        {name:"Automobile",value:1},
+                        {name:"Computers",value:2},
+                        {name:"Consumer Electronics",value:3},
+                        {name:"Sporting Goods",value:4},
+                        {name:"Collectibles",value:5},
+                        {name:"Misc",value:6}
+                    ]
+                }
+            ]).then(function(catChoice){
+                getBidItems(catChoice);
+            }).then(function(resolve,reject){
+                if(reject){
+                    console.log(reject)
+                    dbConn.end();
+                }
+                else{
+                    console.log(resolve);
+                    dbConn.end();
+                }
+            })
+        }
     })
 
 function createItem(bidItem) {
@@ -73,6 +101,25 @@ function createItem(bidItem) {
         }
     );
 }
+
+const getBidItems = function(itemCat){
+    return new Promise(function(resolve, reject){ 
+        let qry= dbConn.query("SELECT id,title FROM bidItems",function (err,resp){
+            if(err){
+                reject(err)
+                resolve(null)
+            }
+            else{
+                console.log(resp)
+                reject(null)
+                resolve(resp)
+            }
+        });
+    });
+};
+
+const placeBid = function(){};
+
 
 function updateProduct() {
     console.log("Updating bids ...\n");
